@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1572622616503.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2763324838",
+    "id" : "A19345EE",
+    "lastKnownWriteTime" : 1572622666,
+    "last_content_update" : 1572622666630,
+    "path" : "~/@Working/big-squid/projects/churn-baby-churn/requirements.txt",
+    "project_path" : "requirements.txt",
+    "properties" : {
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "text"
+}
