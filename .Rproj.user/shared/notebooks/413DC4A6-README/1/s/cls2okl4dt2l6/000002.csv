@@ -1,0 +1,6 @@
+"0","base::identical(x = TelcoData %>% dplyr::distinct(customerID) %>% nrow(),"
+"0","                y = TelcoData %>% nrow())"
+"1","[1]"
+"1"," TRUE"
+"1","
+"

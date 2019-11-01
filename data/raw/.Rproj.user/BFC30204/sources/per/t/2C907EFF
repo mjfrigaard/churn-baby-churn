@@ -1,0 +1,27 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1571865958028.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "983255550",
+    "id" : "2C907EFF",
+    "lastKnownWriteTime" : 1571949423,
+    "last_content_update" : 1571949423612,
+    "path" : "~/Documents/churn_model_casestudy/eda_telco.R",
+    "project_path" : "eda_telco.R",
+    "properties" : {
+        "cursorPosition" : "199,0",
+        "docOutlineVisible" : "1",
+        "scrollLine" : "185",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

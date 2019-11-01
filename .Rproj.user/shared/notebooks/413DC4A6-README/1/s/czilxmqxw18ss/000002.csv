@@ -1,0 +1,3 @@
+"0","TelcoCaseStudy <- TelcoDataRaw %>% "
+"0","  dplyr::filter(customerID == ""7795-CFOCW"")"
+"0","TelcoCaseStudy"

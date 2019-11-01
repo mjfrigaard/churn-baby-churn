@@ -1,0 +1,295 @@
+---
+title: "README - Customer Churn Models"
+author: "Martin Frigaard"
+date: "current version: `r Sys.Date()`"
+output: github_document
+---
+
+
+```{r setup, include=FALSE}
+library(knitr)
+library(rmdformats)
+require(tidyverse)
+library(plotly)
+require(janitor)
+require(skimr)
+library(mosaic)
+library(inspectdf)
+library(visdat)
+library(DT)
+# base options ----
+base::options(
+  tibble.print_max = 25,
+  tibble.width = 78,
+  scipen = 100000000,
+  max.print = 999999
+)
+# knitr chunk options ----
+knitr::opts_chunk$set(
+  echo = TRUE, # show/hide all code
+  # results = "hide", # hide results
+  tidy = FALSE, # cleaner code printing
+  comment = "#> ", # better console printing
+  eval = TRUE, # turn this to FALSE stop code chunks from running
+  message = TRUE, # show messages
+  fig.width = 7, # figure width
+  fig.height = 5, # figure height
+  warning = FALSE, # show warnings
+  size = "small", # size of the text
+  fig.path = "figs/"
+) # location of files
+# knitr knit settings ----
+knitr::opts_knit$set(
+  width = 78
+)
+```
+
+# Motivation
+
+This project is for [Demystify Data Science at EscapeSF](https://www.bigsquid.com/san-francisco-machine-learning-event-2019).
+
+> Business leaders need to make decisions at the speed of business, and yet traditional machine learning projects can take months before they ever see the light of day. 
+
+> We want you to join us for an afternoon of drinks, food, and an escape room with Big Squid machine learning experts and analytics powerhouses from Paradigm Data. You’ll hear what it takes to prepare for machine learning initiatives, how to efficiently develop and deploy ML solutions, and how to democratize data science through your organization.
+
+The documentation for this data set is available [here](https://www.kaggle.com/blastchar/telco-customer-churn) and in the readme file that comes with the Kaggle dataset. 
+
+```{r data-dict}
+fs::dir_tree("data/raw", regex = "dict")
+```
+
+## Objectives
+
+We're looking for a data set with product usage, customer demographics, and churn rates for the event above. See a description of this project below,
+
+> "Customer churn, when a customer ends their relationship with a business, is one of the most basic factors in determining the revenue of a business. You need to know which of your customers are loyal and which are at risk of churning, and you need to know the factors that affect these decisions from a customer perspective. This code pattern explains how to build a machine learning model and use it to predict whether a customer is at risk of churning. This is a full data science project, and you can use your model findings for prescriptive analysis later or for targeted marketing."
+
+Our objectives with this data set are:
+
+1. Demonstrate the importance of sufficiently defining the business question or problem of interest 
+
+2. Map that question/problem into an analytical framework capable of answering it 
+
+## Question/problem of interest
+
+The context statement for this data set is, "*Predict behavior to retain customers. You can analyze all relevant customer data and develop focused customer retention programs.*"
+
+1. We can tell that customer retention (or it's inverse, churn) is the *outcome*. What are the behavioral variables?  
+
+2. Were all the data collected/measured at the same time? If not, is the time different significant? 
+
+Is the customer data current? Was it defined in the same way at each time point? For example, if a customer indicated they were not a senior citizen (i.e. `SeniorCitizen` is `0`) at the beginning of their tenure, but after 60 months they've retired and are now living on a fixed income, this data has changed and no longer captures the measurement relevant to our business question (i.e. *What behaviors drive customer churn?*).
+
+3. What is the level of granularity in this data set? 
+
+ - Is arranged by each customer's monthly bill, so that each `customerID` is repeated 12 times per year, with the services listed for each month, or
+ 
+ - Is this an aggregated/summarized data set with a single measure for the monthly or quarterly bill?
+
+For example, assume a customer has been receiving services for 45 months. Can we tell if the number of services for that customer has changed over the course of their `tenure`? *No.* However, having the data structured in it's current format, we can use `tenure` as a single attribute to predict `Churn`. That would be more complicated to analyze and interpret if we had monthly data.
+
+These questions are also important when we're designing experiments based on the findings. For example, if the business tolerance is "impact within 30 days", then we need to have the data collected and analyzed at the corresponding level. 
+
+Now that we have some questions about what these data look like, we can start getting some answers. Business questions come from a wide audience; stakeholders, revenue, competition, etc., but the analytic framework and available metrics will ultimately frame these questions into what can be used to drive decisions. 
+
+We will import these data and see their structure. 
+
+## Import
+
+```{r import-WA_Fn-UseC_-Telco-Customer-Churn}
+# fs::dir_ls("data/raw")
+TelcoDataRaw <- readr::read_csv("data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv")
+```
+
+The first question we should ask is what the variables (columns) in the data represent. We can break these columns down into the following four categories:
+
+### Things about the customer
+
+`customerID` - unique identifier
+
+`gender` - male or female
+
+`SeniorCitizen` - Are they a senior citizen?
+
+`Partner` - Do they have a partner?
+
+`Dependents` - Do they have any dependents?
+
+`tenure` - how long have they been a customer?
+
+```{r customer-data}
+TelcoDataRaw %>% 
+  dplyr::select(customerID:tenure) %>% 
+  skimr::skim_to_wide()
+```
+
+
+### Things about the customer's relationship to our products & services:
+
+These are the services we're measuring. All of these are asked in a yes/no format, with few options for responses.
+
+```{r product-data}
+TelcoDataRaw %>% 
+  dplyr::select(PhoneService:StreamingMovies) %>% 
+  skimr::skim_to_wide()
+```
+
+`PhoneService` - Did they purchase phone service?
+
+`MultipleLines` - Did they purchase multiple lines?
+
+`InternetService` - Did they purchase internet services?
+
+`OnlineSecurity` - Did they purchase online security
+
+`OnlineBackup` - Did they purchase online backup?
+
+`DeviceProtection` - Did they purchase device protection?
+
+`TechSupport` - Did they purchase tech support?
+
+`StreamingTV` - Did they purchase streaming TV?
+
+`StreamingMovies` - Did they purchase streaming movies?
+
+### Things about the customer's relationship with us:
+
+These columns tell us about how the customer has been paying us.
+
+```{r billing-data}
+TelcoDataRaw %>% 
+  dplyr::select(Contract:TotalCharges) %>% 
+  skimr::skim_to_wide()
+```
+
+`Contract` - What is their contract?
+
+`PaperlessBilling` - Do they have paperless billing?
+
+`PaymentMethod` - What is their payment method?
+
+`MonthlyCharges` - What are the monthly charges?
+
+`TotalCharges` - What are the total charges up to this point?
+
+### The thing we are trying to predict:
+
+`Churn`
+
+```{r churn-data}
+TelcoDataRaw %>% 
+  dplyr::select(Churn) %>% 
+  skimr::skim_to_wide()
+```
+
+### Inspect
+
+Examine the data as a whole will give us an overview of the complete/missing data in our categorical variables. 
+
+```{r inspectdf_cat}
+inspectdf::inspect_cat(df1 = TelcoDataRaw) %>% 
+  inspectdf::show_plot(text_labels = TRUE)
+```
+
+We can see the `customerID` is formatted as a character because it's alphanumeric, which is why it's all black.
+
+```{r customerID}
+TelcoDataRaw %>% 
+  dplyr::select(customerID) %>% 
+  head()
+```
+
+
+Below we can see the distribution of the numerical variables in the `TelcoDataRaw` dataset. 
+
+```{r inspectdf_num}
+inspectdf::inspect_num(df1 = TelcoDataRaw) %>% 
+  inspectdf::show_plot(text_labels = TRUE)
+```
+
+Here we see the `SeniorCitizen` variable is coded numerically (`0` = No, `1` = Yes), so this should be reformatted and displayed in the plot above.
+
+## Wrangle 
+
+We know we have two variables that need to be reformatted (`customerID` and `SeniorCitizen`). We will address this in the code below
+
+
+```{r TelcoData}
+TelcoData <- TelcoDataRaw %>% 
+  dplyr::mutate(customerID = as.factor(customerID), 
+                       SeniorCitizen = case_when(
+                         SeniorCitizen == 1 ~ "Yes", 
+                         SeniorCitizen == 0 ~ "No",
+                         TRUE ~ NA_character_))
+# re-graph
+inspectdf::inspect_cat(df1 = TelcoData) %>% 
+  inspectdf::show_plot(text_labels = TRUE) 
+```
+
+Now we can recheck the numerical variables. 
+
+```{r recheck-numerical}
+inspectdf::inspect_num(df1 = TelcoData) %>% 
+  inspectdf::show_plot(text_labels = TRUE)
+```
+
+
+### Tidy
+
+Do the number of rows equal the number of unique customers? Or are there duplicates? This code tells us if the number of unique `customerID`s is identical to the number of rows in `TelcoData`.
+
+```{r check-unique}
+base::identical(x = TelcoData %>% dplyr::distinct(customerID) %>% nrow(),
+                y = TelcoData %>% nrow())
+```
+
+Good. This helps us understand what we have in terms of data per customer. 
+
+#### Get a case study
+
+Identify a case to represent a customer's experience in your dataset.
+
+```{r 7795-CFOCW}
+TelcoCaseStudy <- TelcoDataRaw %>% 
+  dplyr::filter(customerID == "7795-CFOCW")
+TelcoCaseStudy
+```
+
+A single case study gives us a picture of how a customer moves through the data set. It addresses the questions, "*what did we measure?*", "*who/what did we measure it on?*", and "*how many measurements do we have?*" 
+
+Here we have a case (`"7795-CFOCW"`), and we can see the following attributes: 
+
+1. This customer is a Male, not a senior citizen, has no dependents. 
+2. They've paying for our products/services for 45 months  
+3. They have DSL, online security, device protection, and tech support. 
+
+We know this case is an existing customer (`Churn` = `No`), and that he's paid `42.3` per month. 
+
+#### Know how things are measured
+
+All of these questions are based on binary (`Yes`/`No`) responses to the following services.
+
+### Solve for case 
+
+Tidy these data for the case. 
+
+```{r}
+TelcoCaseStudy %>% 
+  tidyr::gather(key = "service", 
+                value = "purchase_status", 
+                PhoneService:StreamingMovies) %>% 
+  count(purchase_status)
+```
+
+The `MonthlyCharges` and `TotalCharges` are likely summarized before they ended up in this data set. 
+
+### Mutate
+
+At this time, we don't know if we can/should create any new columns based on the data in the existing structure. 
+
+```{r}
+TelcoDataRaw %>%
+  count(InternetService)
+```
+
+

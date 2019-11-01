@@ -1,0 +1,2 @@
+"0","inspectdf::inspect_cat(df1 = TelcoDataRaw) %>% "
+"0","  inspectdf::show_plot(text_labels = TRUE)"
