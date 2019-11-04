@@ -1,5 +1,0 @@
-"0","TelcoCaseStudy %>% "
-"0","  tidyr::gather(key = ""service"", "
-"0","                value = ""purchase_status"", "
-"0","                PhoneService:StreamingMovies) %>% "
-"0","  count(purchase_status)"

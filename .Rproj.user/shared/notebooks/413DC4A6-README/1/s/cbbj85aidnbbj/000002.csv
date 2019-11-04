@@ -1,3 +1,0 @@
-"0","TelcoDataRaw %>% "
-"0","  dplyr::select(customerID) %>% "
-"0","  head()"
